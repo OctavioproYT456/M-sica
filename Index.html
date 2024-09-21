@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reproductor Futurista</title>
+    <style>
+        /* Estilo general */
+        body {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background: #0f0f0f;
+            color: #00ff99;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* Contenedor del reproductor */
+        .player-container {
+            background: #1c1c1e;
+            border: 2px solid #00ff99;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px #00ff99;
+            width: 90%;
+            max-width: 450px;
+            text-align: center;
+        }
+
+        /* Encabezado del reproductor */
+        .player-header h1 {
+            font-size: 5vw; /* Adaptable al tamaño de la pantalla */
+            margin-bottom: 25px;
+            color: #00ff99;
+        }
+
+        /* Menú de selección de canciones */
+        select {
+            background-color: #0f0f0f;
+            color: #00ff99;
+            border: 2px solid #00ff99;
+            padding: 10px;
+            width: 100%;
+            font-size: 4vw; /* Adaptable al tamaño de la pantalla */
+            margin-bottom: 20px;
+            cursor: pointer;
+            appearance: none;
+        }
+
+        select:focus {
+            outline: none;
+            box-shadow: 0 0 15px #00ff99;
+        }
+
+        /* Controles del reproductor */
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #0f0f0f;
+            color: #00ff99;
+            border: 2px solid #00ff99;
+            padding: 12px 22px;
+            font-size: 5vw; /* Adaptable al tamaño de la pantalla */
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #00ff99;
+            color: #0f0f0f;
+        }
+
+        /* Barra de progreso */
+        .progress-container {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+
+        .time {
+            font-size: 4vw; /* Adaptable al tamaño de la pantalla */
+            color: #00ff99;
+            margin: 0 10px;
+        }
+
+        .progress-bar {
+            flex-grow: 1;
+            height: 8px;
+            background: #0f0f0f;
+            border: 1px solid #00ff99;
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .progress {
+            height: 100%;
+            background-color: #00ff99;
+            border-radius: 10px;
+            width: 0%;
+        }
+
+        /* Media queries para pantallas más pequeñas (móviles) */
+        @media (max-width: 600px) {
+            .player-container {
+                padding: 20px;
+            }
+
+            .player-header h1 {
+                font-size: 7vw;
+            }
+
+            select {
+                font-size: 5vw;
+            }
+
+            button {
+                font-size: 7vw;
+            }
+
+            .time {
+                font-size: 5vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="player-header">
+            <h1>Reproductor Futurista</h1>
+        </div>
+
+        <div class="player-body">
+            <!-- Selector de música -->
+            <select id="musicSelect">
+                <option value="" disabled selected>Selecciona una canción</option>
+            </select>
+
+            <!-- Controles de reproducción -->
+            <div class="controls">
+                <button id="playButton">▶️</button>
+                <button id="pauseButton">⏸️</button>
+                <button id="stopButton">⏹️</button>
+            </div>
+
+            <!-- Barra de progreso personalizada -->
+            <div class="progress-container">
+                <span id="currentTime" class="time">00:00</span>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress" id="progress"></div>
+                </div>
+                <span id="totalTime" class="time">00:00</span>
+            </div>
+
+            <!-- Reproductor de audio oculto -->
+            <audio id="audioPlayer" hidden></audio>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const audioPlayer = document.getElementById('audioPlayer');
+            const musicSelect = document.getElementById('musicSelect');
+            const playButton = document.getElementById('playButton');
+            const pauseButton = document.getElementById('pauseButton');
+            const stopButton = document.getElementById('stopButton');
+            const progressBar = document.getElementById('progressBar');
+            const progress = document.getElementById('progress');
+            const currentTimeDisplay = document.getElementById('currentTime');
+            const totalTimeDisplay = document.getElementById('totalTime');
+
+            // Simulación de archivos de música
+            const musicFiles = ['song1.mp3', 'song2.mp3', 'song3.mp3'];
+
+            // Añadir archivos al select
+            musicFiles.forEach(file => {
+                const option = document.createElement('option');
+                option.value = `/music/${file}`;
+                option.textContent = file.replace('.mp3', '');
+                musicSelect.appendChild(option);
+            });
+
+            // Reproducir la canción seleccionada
+            musicSelect.addEventListener('change', function() {
+                audioPlayer.src = this.value;
+                audioPlayer.play();
+            });
+
+            // Botón de reproducir
+            playButton.addEventListener('click', function() {
+                if (audioPlayer.src) {
+                    audioPlayer.play();
+                }
+            });
+
+            // Botón de pausa
+            pauseButton.addEventListener('click', function() {
+                if (audioPlayer.src) {
+                    audioPlayer.pause();
+                }
+            });
+
+            // Botón de detener
+            stopButton.addEventListener('click', function() {
+                if (audioPlayer.src) {
+                    audioPlayer.pause();
+                    audioPlayer.currentTime = 0;
+                    updateProgress();
+                }
+            });
+
+            // Actualizar barra de progreso y tiempo
+            audioPlayer.addEventListener('timeupdate', updateProgress);
+
+            // Actualizar duración total cuando se carga el archivo de audio
+            audioPlayer.addEventListener('loadedmetadata', function() {
+                totalTimeDisplay.textContent = formatTime(audioPlayer.duration);
+            });
+
+            // Barra de progreso interactiva
+            progressBar.addEventListener('click', function(e) {
+                const width = progressBar.clientWidth;
+                const clickX = e.offsetX;
+                const duration = audioPlayer.duration;
+
+                audioPlayer.currentTime = (clickX / width) * duration;
+            });
+
+            // Función para actualizar la barra de progreso
+            function updateProgress() {
+                const duration = audioPlayer.duration;
+                const currentTime = audioPlayer.currentTime;
+                const progressPercent = (currentTime / duration) * 100;
+
+                progress.style.width = `${progressPercent}%`;
+                currentTimeDisplay.textContent = formatTime(currentTime);
+            }
+
+            // Formatear el tiempo (minutos:segundos)
+            function formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes < 10 ? '0' : ''}${minutes}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+        });
+    </script>
+</body>
+</html>
